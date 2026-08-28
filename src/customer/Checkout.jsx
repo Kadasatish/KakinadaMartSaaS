@@ -1,12 +1,14 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { createOrder } from '../services/orders'
-
-const CART_KEY = 'kakinadamart-cart'
+import { getCartKey } from '../tenant'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const [cart] = useState(() => JSON.parse(localStorage.getItem(CART_KEY) || '[]'))
+  const { tenantId } = useParams()
+  const cartKey = getCartKey(tenantId)
+  const storePath = `/store/${tenantId}`
+  const [cart] = useState(() => JSON.parse(localStorage.getItem(cartKey) || '[]'))
   const [form, setForm] = useState({ name: '', phone: '', address: '' })
   const [status, setStatus] = useState('')
   const total = cart.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0)
@@ -15,20 +17,20 @@ export default function Checkout() {
     event.preventDefault()
     setStatus('Saving order…')
     try {
-      await createOrder({ customer: form, items: cart, total })
-      localStorage.removeItem(CART_KEY)
+      await createOrder({ customer: form, items: cart, total, tenantId })
+      localStorage.removeItem(cartKey)
       setStatus('Order placed successfully.')
-      setTimeout(() => navigate('/'), 700)
+      setTimeout(() => navigate(storePath), 700)
     } catch (error) {
       setStatus(error.message)
     }
   }
 
-  if (!cart.length) return <main className="container narrow"><Link to="/">← Store</Link><h1>Checkout</h1><p>Your cart is empty.</p></main>
+  if (!cart.length) return <main className="container narrow"><Link to={storePath}>← Store</Link><h1>Checkout</h1><p>Your cart is empty.</p></main>
 
   return (
     <main className="container narrow">
-      <Link to="/cart">← Cart</Link>
+      <Link to={`${storePath}/cart`}>← Cart</Link>
       <h1>Checkout</h1>
       <p>Customer login is not required. These details are collected only for this order.</p>
       <form className="form-card" onSubmit={submit}>
