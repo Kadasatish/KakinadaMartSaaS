@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
 
-export default function Header({ cartCount = 0 }) {
+export default function Header({ cartCount = 0, tenantId }) {
+  const storePath = `/store/${tenantId}`
   return (
     <header className="site-header">
-      <Link className="brand" to="/">KakinadaMart</Link>
+      <Link className="brand" to={storePath}>KakinadaMart</Link>
       <nav>
-        <Link to="/cart">Cart ({cartCount})</Link>
+        <Link to={`${storePath}/cart`}>Cart ({cartCount})</Link>
       </nav>
     </header>
   )
