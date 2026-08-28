@@ -7,16 +7,36 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    function adminTenantId() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.keys().hasAll(['tenantId'])
+        ? get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.tenantId
+        : 'kakinadamart';
+    }
+
     match /products/{productId} {
       allow read: if true;
-      allow create, update, delete: if isAdmin();
+      allow create: if isAdmin()
+        && request.resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin()
+        && resource.data.tenantId == adminTenantId()
+        && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin()
+        && resource.data.tenantId == adminTenantId();
     }
 
     match /orders/{orderId} {
-      allow create: if request.resource.data.keys().hasAll(['customer', 'items', 'total', 'status', 'createdAt'])
+      allow create: if request.resource.data.keys().hasAll(['tenantId', 'customer', 'items', 'total', 'status', 'createdAt'])
+        && request.resource.data.tenantId is string
+        && request.resource.data.tenantId.size() > 0
         && request.resource.data.status == 'new'
         && request.resource.data.customer.keys().hasAll(['name', 'phone', 'address']);
-      allow read, update, delete: if isAdmin();
+      allow read: if isAdmin()
+        && resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin()
+        && resource.data.tenantId == adminTenantId()
+        && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin()
+        && resource.data.tenantId == adminTenantId();
     }
 
     match /admins/{uid} {
