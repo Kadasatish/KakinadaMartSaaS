@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { auth } from '../firebase'
 import { getProducts, removeProduct, saveProduct } from '../services/products'
 import { getOrders, ORDER_STATUSES, updateOrderStatus } from '../services/orders'
+import { getAdminTenant } from '../tenant'
 
 function formatDate(value) {
   if (!value?.toDate) return 'Just now'
@@ -10,6 +11,7 @@ function formatDate(value) {
 }
 
 export default function AdminDashboard() {
+  const tenantId = getAdminTenant()
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
   const [form, setForm] = useState({ name: '', price: '' })
@@ -17,24 +19,24 @@ export default function AdminDashboard() {
   const [loadingOrders, setLoadingOrders] = useState(true)
 
   async function loadProducts() {
-    try { setProducts(await getProducts()) } catch (err) { setError(err.message) }
+    try { setProducts(await getProducts(tenantId)) } catch (err) { setError(err.message) }
   }
 
   async function loadOrders() {
-    try { setOrders(await getOrders()) } catch (err) { setError(err.message) }
+    try { setOrders(await getOrders(tenantId)) } catch (err) { setError(err.message) }
     finally { setLoadingOrders(false) }
   }
 
   useEffect(() => {
     loadProducts()
     loadOrders()
-  }, [])
+  }, [tenantId])
 
   async function submit(event) {
     event.preventDefault()
     setError('')
     try {
-      await saveProduct(form)
+      await saveProduct(form, tenantId)
       setForm({ name: '', price: '' })
       await loadProducts()
     } catch (err) { setError(err.message) }
@@ -56,7 +58,7 @@ export default function AdminDashboard() {
   return (
     <main className="container admin-page">
       <div className="admin-bar">
-        <div><span className="eyebrow">Private area</span><h1>Admin Dashboard</h1></div>
+        <div><span className="eyebrow">Private area · {tenantId}</span><h1>Admin Dashboard</h1></div>
         <button className="secondary" onClick={() => auth && signOut(auth)}>Sign out</button>
       </div>
 
