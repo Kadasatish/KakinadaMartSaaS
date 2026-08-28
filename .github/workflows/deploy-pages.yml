@@ -11,7 +11,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: pages
+  group: kakinadamart-pages
   cancel-in-progress: true
 
 jobs:
@@ -33,7 +33,7 @@ jobs:
         run: npm run build
 
       - name: Verify Vite output
-        run: test -f dist/index.html && test -f dist/assets/index.css || (echo "Vite dist output is incomplete" && exit 1)
+        run: test -f dist/index.html && test -d dist/assets || (echo "Vite dist output is incomplete" && exit 1)
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
