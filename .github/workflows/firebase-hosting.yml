@@ -48,7 +48,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
 
-      - name: Deploy to Firebase Hosting
+      - name: Deploy Hosting and Firestore rules
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only hosting --project kakinadamartsaas --non-interactive
+        run: firebase deploy --only hosting,firestore:rules --project kakinadamartsaas --non-interactive
