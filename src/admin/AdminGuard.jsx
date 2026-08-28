@@ -3,7 +3,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { useEffect, useState } from 'react'
 import { Navigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
-import { setAdminTenant } from '../tenant'
+import { DEFAULT_TENANT_ID, setAdminTenant } from '../tenant'
 
 export function AdminGuard({ children }) {
   const [state, setState] = useState('checking')
@@ -22,9 +22,9 @@ export function AdminGuard({ children }) {
 
       try {
         const adminDoc = await getDoc(doc(db, 'admins', user.uid))
-        const data = adminDoc.data()
-        if (adminDoc.exists() && data?.role === 'admin' && data?.tenantId) {
-          setAdminTenant(data.tenantId)
+        if (adminDoc.exists()) {
+          const tenantId = adminDoc.data()?.tenantId || DEFAULT_TENANT_ID
+          setAdminTenant(tenantId)
           setState('allowed')
         } else {
           setState('forbidden')
