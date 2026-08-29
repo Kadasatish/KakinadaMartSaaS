@@ -9,6 +9,7 @@ export default function SuperAdminDashboard() {
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [updatingId, setUpdatingId] = useState('')
 
   async function loadAdmins() {
     setError('')
@@ -25,14 +26,19 @@ export default function SuperAdminDashboard() {
   useEffect(() => { loadAdmins() }, [])
 
   async function toggleAdmin(admin) {
+    const nextActive = admin.active !== true
+    setUpdatingId(admin.id)
+    setError('')
     try {
       await updateDoc(doc(db, 'admins', admin.id), {
-        active: admin.active !== true,
+        active: nextActive,
         updatedAt: serverTimestamp()
       })
-      await loadAdmins()
+      setAdmins((current) => current.map((item) => item.id === admin.id ? { ...item, active: nextActive } : item))
     } catch (err) {
-      setError(err.message || 'Unable to update admin.')
+      setError(err.message || 'Unable to update admin status.')
+    } finally {
+      setUpdatingId('')
     }
   }
 
@@ -53,17 +59,31 @@ export default function SuperAdminDashboard() {
       {error && <p className="error">{error}</p>}
       {loading ? <p>Loading admins…</p> : (
         <section className="product-grid">
-          {admins.map((admin) => (
-            <article className="form-card" key={admin.id}>
-              <h2>{admin.tenantId || 'No tenant'}</h2>
-              <p><strong>UID:</strong> {admin.id}</p>
-              <p><strong>Role:</strong> {admin.role || 'admin'}</p>
-              <p><strong>Status:</strong> {admin.active === true ? 'Active' : 'Suspended'}</p>
-              <button type="button" onClick={() => toggleAdmin(admin)}>
-                {admin.active === true ? 'Suspend Admin' : 'Activate Admin'}
-              </button>
-            </article>
-          ))}
+          {admins.map((admin) => {
+            const active = admin.active === true
+            return (
+              <article className="form-card" key={admin.id}>
+                <div className="admin-status-head">
+                  <div>
+                    <h2>{admin.tenantId || 'No tenant'}</h2>
+                    <p className="status-label">{active ? 'Active' : 'Inactive'}</p>
+                  </div>
+                  <label className={`status-toggle ${active ? 'is-on' : ''}`}>
+                    <input
+                      type="checkbox"
+                      checked={active}
+                      disabled={updatingId === admin.id}
+                      onChange={() => toggleAdmin(admin)}
+                      aria-label={`${active ? 'Deactivate' : 'Activate'} ${admin.tenantId || 'admin'}`}
+                    />
+                    <span className="status-toggle-track" aria-hidden="true"><span /></span>
+                  </label>
+                </div>
+                <p><strong>UID:</strong> {admin.id}</p>
+                <p><strong>Role:</strong> {admin.role || 'admin'}</p>
+              </article>
+            )
+          })}
         </section>
       )}
     </main>
