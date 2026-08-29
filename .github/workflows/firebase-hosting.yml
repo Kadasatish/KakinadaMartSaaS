@@ -2,7 +2,7 @@ name: Deploy Vite app to Firebase Hosting
 
 on:
   push:
-    branches: [firebase-hosting-migration, multi-tenant-saas]
+    branches: [firebase-hosting-migration, multi-tenant-saas, super-admin-foundation]
   workflow_dispatch:
 
 env:
@@ -48,7 +48,7 @@ jobs:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/firebase-service-account.json"
 
-      - name: Deploy Firebase Hosting
+      - name: Deploy Firebase Hosting and Firestore rules
         env:
           GOOGLE_APPLICATION_CREDENTIALS: ${{ runner.temp }}/firebase-service-account.json
-        run: firebase deploy --only hosting --project kakinadamartsaas --non-interactive
+        run: firebase deploy --only hosting,firestore:rules --project kakinadamartsaas --non-interactive
