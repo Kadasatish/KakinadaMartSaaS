@@ -7,6 +7,13 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/admins/$(request.auth.uid));
     }
 
+    function isSuperAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/superAdmins/$(request.auth.uid)).data.role == 'superAdmin'
+        && get(/databases/$(database)/documents/superAdmins/$(request.auth.uid)).data.active == true;
+    }
+
     function adminTenantId() {
       return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.keys().hasAll(['tenantId'])
         ? get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.tenantId
@@ -15,13 +22,9 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow read: if true;
-      allow create: if isAdmin()
-        && request.resource.data.tenantId == adminTenantId();
-      allow update: if isAdmin()
-        && resource.data.tenantId == adminTenantId()
-        && request.resource.data.tenantId == adminTenantId();
-      allow delete: if isAdmin()
-        && resource.data.tenantId == adminTenantId();
+      allow create: if isAdmin() && request.resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin() && resource.data.tenantId == adminTenantId() && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin() && resource.data.tenantId == adminTenantId();
     }
 
     match /orders/{orderId} {
@@ -30,17 +33,18 @@ service cloud.firestore {
         && request.resource.data.tenantId.size() > 0
         && request.resource.data.status == 'new'
         && request.resource.data.customer.keys().hasAll(['name', 'phone', 'address']);
-      allow read: if isAdmin()
-        && resource.data.tenantId == adminTenantId();
-      allow update: if isAdmin()
-        && resource.data.tenantId == adminTenantId()
-        && request.resource.data.tenantId == adminTenantId();
-      allow delete: if isAdmin()
-        && resource.data.tenantId == adminTenantId();
+      allow read: if isAdmin() && resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin() && resource.data.tenantId == adminTenantId() && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin() && resource.data.tenantId == adminTenantId();
     }
 
     match /admins/{uid} {
-      allow read: if isAdmin() && request.auth.uid == uid;
+      allow read: if isSuperAdmin() || (isAdmin() && request.auth.uid == uid);
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /superAdmins/{uid} {
+      allow read: if isSuperAdmin() && request.auth.uid == uid;
       allow write: if false;
     }
   }
