@@ -22,8 +22,9 @@ export function AdminGuard({ children }) {
 
       try {
         const adminDoc = await getDoc(doc(db, 'admins', user.uid))
-        if (adminDoc.exists()) {
-          const tenantId = adminDoc.data()?.tenantId || DEFAULT_TENANT_ID
+        const data = adminDoc.data()
+        if (adminDoc.exists() && data?.active === true) {
+          const tenantId = data?.tenantId || DEFAULT_TENANT_ID
           setAdminTenant(tenantId)
           setState('allowed')
         } else {
@@ -38,6 +39,6 @@ export function AdminGuard({ children }) {
   if (state === 'checking') return <main className="container"><p>Checking access…</p></main>
   if (state === 'unconfigured') return <main className="container"><p className="error">Firebase is not configured yet.</p></main>
   if (state === 'signed-out') return <Navigate to="/admin/login" replace />
-  if (state === 'forbidden') return <main className="container"><p className="error">Admin access denied.</p></main>
+  if (state === 'forbidden') return <main className="container"><p className="error">Admin access denied or account is inactive.</p></main>
   return children
 }
