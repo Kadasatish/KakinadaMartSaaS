@@ -44,7 +44,10 @@ service cloud.firestore {
     }
 
     match /superAdmins/{uid} {
-      allow read: if isSuperAdmin() && request.auth.uid == uid;
+      allow read: if request.auth != null
+        && request.auth.uid == uid
+        && resource.data.role == 'superAdmin'
+        && resource.data.active == true;
       allow write: if false;
     }
   }
