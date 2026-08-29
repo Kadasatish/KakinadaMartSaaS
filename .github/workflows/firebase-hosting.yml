@@ -2,7 +2,7 @@ name: Deploy Vite app to Firebase Hosting
 
 on:
   push:
-    branches: [firebase-hosting-migration, multi-tenant-saas, super-admin-foundation, saas-master-settings]
+    branches: [main]
   workflow_dispatch:
 
 env:
