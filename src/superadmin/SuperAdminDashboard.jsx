@@ -1,15 +1,30 @@
 import { collection, doc, getDocs, serverTimestamp, updateDoc } from 'firebase/firestore'
 import { signOut } from 'firebase/auth'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
+
+function Toggle({ checked, disabled, onChange }) {
+  return (
+    <button
+      type="button"
+      className={`status-toggle ${checked ? 'on' : ''}`}
+      aria-pressed={checked}
+      aria-label={checked ? 'Deactivate admin' : 'Activate admin'}
+      disabled={disabled}
+      onClick={onChange}
+    >
+      <span className="status-toggle-knob" />
+    </button>
+  )
+}
 
 export default function SuperAdminDashboard() {
   const navigate = useNavigate()
   const [admins, setAdmins] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [updatingId, setUpdatingId] = useState('')
+  const [busyId, setBusyId] = useState('')
 
   async function loadAdmins() {
     setError('')
@@ -26,19 +41,18 @@ export default function SuperAdminDashboard() {
   useEffect(() => { loadAdmins() }, [])
 
   async function toggleAdmin(admin) {
-    const nextActive = admin.active !== true
-    setUpdatingId(admin.id)
+    setBusyId(admin.id)
     setError('')
     try {
       await updateDoc(doc(db, 'admins', admin.id), {
-        active: nextActive,
+        active: admin.active !== true,
         updatedAt: serverTimestamp()
       })
-      setAdmins((current) => current.map((item) => item.id === admin.id ? { ...item, active: nextActive } : item))
+      await loadAdmins()
     } catch (err) {
-      setError(err.message || 'Unable to update admin status.')
+      setError(err.message || 'Unable to update admin.')
     } finally {
-      setUpdatingId('')
+      setBusyId('')
     }
   }
 
@@ -47,45 +61,60 @@ export default function SuperAdminDashboard() {
     navigate('/super-admin/login', { replace: true })
   }
 
+  const stats = useMemo(() => ({
+    total: admins.length,
+    active: admins.filter((admin) => admin.active === true).length,
+    inactive: admins.filter((admin) => admin.active !== true).length
+  }), [admins])
+
   return (
-    <main className="container">
-      <header className="hero">
-        <p className="eyebrow">Platform Control</p>
-        <h1>Super Admin Dashboard</h1>
-        <p>Manage tenant administrators and their access status.</p>
-        <button type="button" onClick={logout}>Logout</button>
+    <main className="container superadmin-page">
+      <header className="superadmin-header">
+        <div>
+          <p className="eyebrow">Platform Control Center</p>
+          <h1>Super Admin</h1>
+          <p className="muted">Control tenant administrators and platform access.</p>
+        </div>
+        <button className="secondary" type="button" onClick={logout}>Sign out</button>
       </header>
 
-      {error && <p className="error">{error}</p>}
-      {loading ? <p>Loading admins…</p> : (
-        <section className="product-grid">
-          {admins.map((admin) => {
-            const active = admin.active === true
-            return (
-              <article className="form-card" key={admin.id}>
-                <div className="admin-status-head">
-                  <div>
-                    <h2>{admin.tenantId || 'No tenant'}</h2>
-                    <p className="status-label">{active ? 'Active' : 'Inactive'}</p>
+      <section className="sa-stats" aria-label="Admin statistics">
+        <article><span>Total admins</span><strong>{stats.total}</strong></article>
+        <article><span>Active</span><strong>{stats.active}</strong></article>
+        <article><span>Inactive</span><strong>{stats.inactive}</strong></article>
+      </section>
+
+      <section className="sa-panel">
+        <div className="sa-panel-head">
+          <div><p className="eyebrow">Tenant access</p><h2>Administrators</h2></div>
+          <button className="secondary" type="button" onClick={loadAdmins} disabled={loading}>Refresh</button>
+        </div>
+
+        {error && <p className="error">{error}</p>}
+        {loading ? <p>Loading administrators…</p> : admins.length === 0 ? (
+          <div className="empty-state"><strong>No tenant admins yet.</strong><span>Create an admin account and assign its tenant ID to manage it here.</span></div>
+        ) : (
+          <div className="admin-table">
+            {admins.map((admin) => {
+              const active = admin.active === true
+              const busy = busyId === admin.id
+              return (
+                <article className="sa-admin-row" key={admin.id}>
+                  <div className="sa-admin-main">
+                    <strong>{admin.tenantId || 'No tenant assigned'}</strong>
+                    <span>{admin.email || admin.id}</span>
+                    <small>Role: {admin.role || 'admin'}</small>
                   </div>
-                  <label className={`status-toggle ${active ? 'is-on' : ''}`}>
-                    <input
-                      type="checkbox"
-                      checked={active}
-                      disabled={updatingId === admin.id}
-                      onChange={() => toggleAdmin(admin)}
-                      aria-label={`${active ? 'Deactivate' : 'Activate'} ${admin.tenantId || 'admin'}`}
-                    />
-                    <span className="status-toggle-track" aria-hidden="true"><span /></span>
-                  </label>
-                </div>
-                <p><strong>UID:</strong> {admin.id}</p>
-                <p><strong>Role:</strong> {admin.role || 'admin'}</p>
-              </article>
-            )
-          })}
-        </section>
-      )}
+                  <div className="sa-admin-status">
+                    <span className={`status-label ${active ? 'active' : 'inactive'}`}>{active ? 'Active' : 'Inactive'}</span>
+                    <Toggle checked={active} disabled={busy} onChange={() => toggleAdmin(admin)} />
+                  </div>
+                </article>
+              )
+            })}
+          </div>
+        )}
+      </section>
     </main>
   )
 }
