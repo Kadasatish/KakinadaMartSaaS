@@ -1,0 +1,55 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/admins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.active == true;
+    }
+
+    function isSuperAdmin() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/superAdmins/$(request.auth.uid))
+        && get(/databases/$(database)/documents/superAdmins/$(request.auth.uid)).data.role == 'superAdmin'
+        && get(/databases/$(database)/documents/superAdmins/$(request.auth.uid)).data.active == true;
+    }
+
+    function adminTenantId() {
+      return get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.keys().hasAll(['tenantId'])
+        ? get(/databases/$(database)/documents/admins/$(request.auth.uid)).data.tenantId
+        : 'kakinadamart';
+    }
+
+    match /products/{productId} {
+      allow read: if true;
+      allow create: if isAdmin() && request.resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin() && resource.data.tenantId == adminTenantId() && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin() && resource.data.tenantId == adminTenantId();
+    }
+
+    match /orders/{orderId} {
+      allow create: if request.resource.data.keys().hasAll(['tenantId', 'customer', 'items', 'total', 'status', 'createdAt'])
+        && request.resource.data.tenantId is string
+        && request.resource.data.tenantId.size() > 0
+        && request.resource.data.status == 'new'
+        && request.resource.data.customer.keys().hasAll(['name', 'phone', 'address']);
+      allow read: if isAdmin() && resource.data.tenantId == adminTenantId();
+      allow update: if isAdmin() && resource.data.tenantId == adminTenantId() && request.resource.data.tenantId == adminTenantId();
+      allow delete: if isAdmin() && resource.data.tenantId == adminTenantId();
+    }
+
+    match /admins/{uid} {
+      allow read: if isSuperAdmin() || (isAdmin() && request.auth.uid == uid);
+      allow create, update, delete: if isSuperAdmin();
+    }
+
+    match /superAdmins/{uid} {
+      allow read: if request.auth != null
+        && request.auth.uid == uid
+        && resource.data.role == 'superAdmin'
+        && resource.data.active == true;
+      allow write: if false;
+    }
+  }
+}

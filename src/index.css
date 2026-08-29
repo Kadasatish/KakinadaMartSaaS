@@ -1,0 +1,73 @@
+* { box-sizing: border-box; }
+
+:root { font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #0f172a; background: #f8fafc; }
+body { margin: 0; min-width: 320px; background: #f8fafc; }
+a { color: inherit; }
+button, input, textarea, select { font: inherit; }
+button { border: 0; border-radius: 10px; padding: 11px 16px; background: #0f172a; color: white; cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button.secondary, .secondary-link { background: #e2e8f0; color: #0f172a; }
+button.danger { background: #fee2e2; color: #991b1b; padding: 8px 11px; }
+.site-header { position: sticky; top: 0; z-index: 10; display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; background: rgba(255,255,255,.94); border-bottom: 1px solid #e2e8f0; backdrop-filter: blur(10px); }
+.brand { font-weight: 800; text-decoration: none; }
+.site-header nav a { text-decoration: none; font-weight: 600; }
+.container { width: min(1100px, calc(100% - 32px)); margin: 0 auto; padding: 32px 0 60px; }
+.narrow { max-width: 720px; }
+.hero { padding: 36px 0 28px; }
+.hero h1, .admin-bar h1 { margin: 6px 0 10px; font-size: clamp(2rem, 7vw, 4rem); line-height: 1; }
+.eyebrow { color: #16a34a; font-size: .78rem; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; margin: 0; }
+.muted { color: #64748b; }
+.secondary-link { display: inline-block; margin-top: 12px; padding: 10px 14px; border-radius: 10px; text-decoration: none; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 16px; }
+.product-card { padding: 16px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; box-shadow: 0 4px 20px rgba(15,23,42,.04); }
+.product-card h2 { margin: 12px 0 6px; font-size: 1.05rem; }
+.product-placeholder { display: grid; place-items: center; height: 150px; border-radius: 12px; background: #e2e8f0; font-weight: 900; color: #64748b; }
+.price { font-weight: 800; font-size: 1.15rem; margin: 0 0 14px; }
+.form-card { display: grid; gap: 16px; padding: 20px; margin-top: 18px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; }
+label { display: grid; gap: 7px; font-weight: 650; }
+input, textarea, select { width: 100%; border: 1px solid #cbd5e1; border-radius: 10px; padding: 11px 12px; background: white; }
+.cart-list { display: grid; gap: 10px; margin: 20px 0; }
+.cart-row, .admin-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 14px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; }
+.cart-row > div { display: grid; gap: 4px; flex: 1; }
+.cart-row input { width: 72px; }
+.cart-total { text-align: right; font-size: 1.2rem; font-weight: 800; margin: 18px 0; }
+.status { margin: 0; color: #166534; }
+.error { padding: 12px; color: #991b1b; background: #fee2e2; border-radius: 10px; }
+.admin-page { padding-top: 28px; }
+.admin-bar { display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+.admin-grid { display: grid; grid-template-columns: minmax(260px, .7fr) minmax(0, 1.3fr); gap: 24px; margin-top: 20px; }
+.admin-row { margin: 10px 0; }
+.orders-section { margin-top: 42px; }
+.orders-section h2 { margin: 6px 0 0; font-size: 1.8rem; }
+.orders-list { display: grid; gap: 14px; margin-top: 16px; }
+.order-card { padding: 18px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; }
+.order-card p { margin: 9px 0; }
+.order-head { display: flex; justify-content: space-between; gap: 16px; padding-bottom: 10px; border-bottom: 1px solid #e2e8f0; }
+.order-head > div { display: grid; gap: 3px; }
+.order-head small { color: #64748b; }
+.order-status { max-width: 240px; margin-top: 14px; }
+.superadmin-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding: 18px 0 28px; }
+.superadmin-header h1 { margin: 5px 0 8px; font-size: clamp(2.2rem, 7vw, 3.6rem); line-height: 1; }
+.sa-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+.sa-stats article { display: grid; gap: 8px; padding: 18px; background: white; border: 1px solid #e2e8f0; border-radius: 16px; }
+.sa-stats span { color: #64748b; font-size: .9rem; }
+.sa-stats strong { font-size: 2rem; line-height: 1; }
+.sa-panel { padding: 20px; background: white; border: 1px solid #e2e8f0; border-radius: 18px; }
+.sa-panel-head { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 16px; }
+.sa-panel-head h2 { margin: 5px 0 0; font-size: 1.6rem; }
+.admin-table { display: grid; gap: 10px; }
+.sa-admin-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; border: 1px solid #e2e8f0; border-radius: 14px; }
+.sa-admin-main { min-width: 0; display: grid; gap: 4px; }
+.sa-admin-main strong { font-size: 1rem; overflow-wrap: anywhere; }
+.sa-admin-main span, .sa-admin-main small { color: #64748b; overflow-wrap: anywhere; }
+.sa-admin-status { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.status-label { min-width: 62px; text-align: right; font-size: .82rem; font-weight: 800; }
+.status-label.active { color: #15803d; }
+.status-label.inactive { color: #64748b; }
+.status-toggle { position: relative; width: 48px; height: 28px; padding: 0; border-radius: 999px; background: #cbd5e1; transition: background .18s ease; }
+.status-toggle.on { background: #16a34a; }
+.status-toggle-knob { position: absolute; top: 4px; left: 4px; width: 20px; height: 20px; border-radius: 50%; background: white; box-shadow: 0 1px 4px rgba(15,23,42,.25); transition: transform .18s ease; }
+.status-toggle.on .status-toggle-knob { transform: translateX(20px); }
+.empty-state { display: grid; gap: 5px; padding: 24px; text-align: center; color: #64748b; background: #f8fafc; border-radius: 14px; }
+.empty-state strong { color: #0f172a; }
+@media (max-width: 700px) { .admin-grid { grid-template-columns: 1fr; } .cart-row { align-items: flex-start; flex-wrap: wrap; } .admin-bar { align-items: flex-start; } .sa-stats { grid-template-columns: 1fr; } .superadmin-header, .sa-panel-head { align-items: flex-start; } .sa-admin-row { align-items: flex-start; } }
