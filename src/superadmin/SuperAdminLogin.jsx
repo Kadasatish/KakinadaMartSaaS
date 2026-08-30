@@ -36,16 +36,21 @@ export default function SuperAdminLogin() {
   }
 
   return (
-    <main className="container narrow admin-page">
-      <Link to="/">← Customer store</Link>
-      <h1>Super Admin</h1>
-      <p>Platform management access.</p>
-      <form className="form-card" onSubmit={submit}>
-        <label>Email<input type="email" required value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-        <label>Password<input type="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
-        <button type="submit" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
-        {error && <p className="error">{error}</p>}
-      </form>
+    <main className="container auth-page">
+      <section className="auth-shell">
+        <Link className="auth-back" to="/">← Back to customer store</Link>
+        <div className="auth-card">
+          <span className="auth-badge">Platform control</span>
+          <h1>Super Admin</h1>
+          <p>Secure access to tenant administrators and platform controls.</p>
+          <form className="form-card" onSubmit={submit}>
+            <label>Email<input autoComplete="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="superadmin@example.com" /></label>
+            <label>Password<input autoComplete="current-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /></label>
+            <button type="submit" disabled={busy}>{busy ? 'Verifying access…' : 'Enter control center'}</button>
+            {error && <p className="error">{error}</p>}
+          </form>
+        </div>
+      </section>
     </main>
   )
 }
