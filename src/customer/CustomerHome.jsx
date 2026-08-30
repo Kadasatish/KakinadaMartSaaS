@@ -3,10 +3,11 @@ import { Link, useParams } from 'react-router-dom'
 import Header from '../components/Header'
 import ProductCard from '../components/ProductCard'
 import { getProducts } from '../services/products'
-import { getCartKey } from '../tenant'
+import { getCartKey, getAdminIdentity, PLATFORM_NAME } from '../tenant'
 
 export default function CustomerHome() {
   const { tenantId } = useParams()
+  const identity = getAdminIdentity(tenantId)
   const cartKey = getCartKey(tenantId)
   const [products, setProducts] = useState([])
   const [cart, setCart] = useState(() => JSON.parse(localStorage.getItem(cartKey) || '[]'))
@@ -39,9 +40,9 @@ export default function CustomerHome() {
       <Header tenantId={tenantId} cartCount={cartCount} />
       <main className="container store-page">
         <section className="hero">
-          <p className="eyebrow">Local shopping · {tenantId}</p>
-          <h1>Shop local.<br />Delivered simply.</h1>
-          <p>Browse what this store has in stock, add your favourites to the cart, and share your delivery details only when you checkout.</p>
+          <p className="eyebrow">{PLATFORM_NAME} · Store #{identity.number || '—'}</p>
+          <h1>{identity.storeName}</h1>
+          <p>This is the <strong>{identity.storeName}</strong> store on {PLATFORM_NAME}. Browse products, add your favourites to the cart, and share your delivery details only when you checkout.</p>
           <div className="hero-actions">
             <Link className="secondary-link" to={`${storePath}/cart`}>View cart {cartCount > 0 && `· ${cartCount}`}</Link>
             <span className="store-status"><i /> Store online</span>
@@ -51,7 +52,7 @@ export default function CustomerHome() {
         <section className="store-section">
           <div className="section-heading">
             <div>
-              <p className="eyebrow">Available now</p>
+              <p className="eyebrow">{identity.storeName} · Available now</p>
               <h2>Products</h2>
             </div>
             <span className="product-count">{products.length} items</span>
