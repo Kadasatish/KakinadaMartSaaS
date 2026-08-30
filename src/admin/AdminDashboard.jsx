@@ -4,7 +4,7 @@ import { auth } from '../firebase'
 import { getProducts, removeProduct, saveProduct } from '../services/products'
 import { uploadImage } from '../services/cloudinary'
 import { getOrders, ORDER_STATUSES, updateOrderStatus } from '../services/orders'
-import { getAdminTenant } from '../tenant'
+import { getAdminTenant, getAdminIdentity } from '../tenant'
 
 function formatDate(value) {
   if (!value?.toDate) return 'Just now'
@@ -15,6 +15,7 @@ const emptyForm = { name: '', price: '', imageUrls: [''] }
 
 export default function AdminDashboard() {
   const tenantId = getAdminTenant()
+  const identity = getAdminIdentity(tenantId)
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
   const [form, setForm] = useState(emptyForm)
@@ -84,8 +85,8 @@ export default function AdminDashboard() {
     <main className="container admin-page">
       <header className="admin-bar admin-hero-bar">
         <div>
-          <p className="eyebrow">Private store workspace</p>
-          <h1>Admin Dashboard</h1>
+          <p className="eyebrow">Private store workspace · Admin {identity.number || '—'}</p>
+          <h1>{identity.name}</h1>
           <p className="muted">Manage <strong>{tenantId}</strong>, products, images, and orders.</p>
         </div>
         <div className="admin-header-actions">
