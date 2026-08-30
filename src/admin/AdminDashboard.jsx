@@ -4,7 +4,7 @@ import { auth } from '../firebase'
 import { getProducts, removeProduct, saveProduct } from '../services/products'
 import { uploadImage } from '../services/cloudinary'
 import { getOrders, ORDER_STATUSES, updateOrderStatus } from '../services/orders'
-import { getAdminTenant, getAdminIdentity } from '../tenant'
+import { getAdminTenant, getAdminIdentity, PLATFORM_NAME } from '../tenant'
 
 function formatDate(value) {
   if (!value?.toDate) return 'Just now'
@@ -85,12 +85,12 @@ export default function AdminDashboard() {
     <main className="container admin-page">
       <header className="admin-bar admin-hero-bar">
         <div>
-          <p className="eyebrow">Private store workspace · Admin {identity.number || '—'}</p>
-          <h1>{identity.name}</h1>
-          <p className="muted">Manage <strong>{tenantId}</strong>, products, images, and orders.</p>
+          <p className="eyebrow">{PLATFORM_NAME} · Store #{identity.number || '—'} · Admin</p>
+          <h1>{identity.storeName}</h1>
+          <p className="muted">Admin #{identity.number || '—'} · {identity.name}. Manage your store's products, images, and orders.</p>
         </div>
         <div className="admin-header-actions">
-          <a className="secondary-link" href={storePath}>View customer store ↗</a>
+          <a className="secondary-link" href={storePath}>View {PLATFORM_NAME} · {identity.storeName} ↗</a>
           <button className="secondary" type="button" onClick={() => auth && signOut(auth)}>Sign out</button>
         </div>
       </header>
@@ -103,7 +103,7 @@ export default function AdminDashboard() {
 
       <section className="admin-grid">
         <form className="form-card" onSubmit={submit}>
-          <div><p className="eyebrow">Catalog</p><h2>Add product</h2></div>
+          <div><p className="eyebrow">{identity.storeName} · Catalog</p><h2>Add product</h2></div>
           <label>Name<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Product name" /></label>
           <label>Price<input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} placeholder="0.00" /></label>
 
@@ -131,7 +131,7 @@ export default function AdminDashboard() {
         </form>
 
         <section className="admin-list-panel">
-          <div className="section-heading"><div><p className="eyebrow">Catalog</p><h2>Products</h2></div><span className="product-count">{products.length} items</span></div>
+          <div className="section-heading"><div><p className="eyebrow">{identity.storeName} · Catalog</p><h2>Products</h2></div><span className="product-count">{products.length} items</span></div>
           {products.length === 0 && <div className="empty-state"><strong>No products yet.</strong><span>Add the first product using the form.</span></div>}
           {products.map((product) => (
             <div className="admin-row" key={product.id}>
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
 
       <section className="orders-section">
         <div className="admin-bar">
-          <div><p className="eyebrow">Fulfilment</p><h2>Orders</h2></div>
+          <div><p className="eyebrow">Fulfilment · {identity.storeName}</p><h2>Orders</h2></div>
           <button className="secondary" type="button" onClick={loadOrders}>Refresh</button>
         </div>
         {loadingOrders ? <p>Loading orders…</p> : orders.length === 0 ? <div className="empty-state"><strong>No orders yet.</strong><span>Customer orders will appear here.</span></div> : (
