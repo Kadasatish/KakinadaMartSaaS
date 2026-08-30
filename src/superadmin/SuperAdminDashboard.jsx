@@ -3,6 +3,7 @@ import { signOut } from 'firebase/auth'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
+import { SUPER_ADMIN_URL_IDENTITY } from '../tenant'
 
 function Toggle({ checked, disabled, onChange }) {
   return (
@@ -58,7 +59,7 @@ export default function SuperAdminDashboard() {
 
   async function logout() {
     await signOut(auth)
-    navigate('/super-admin/login', { replace: true })
+    navigate(`/super-admin/${SUPER_ADMIN_URL_IDENTITY.slug}/login`, { replace: true })
   }
 
   const stats = useMemo(() => ({
@@ -71,8 +72,8 @@ export default function SuperAdminDashboard() {
     <main className="container superadmin-page">
       <header className="superadmin-header">
         <div>
-          <p className="eyebrow">Platform Control Center</p>
-          <h1>Super Admin</h1>
+          <p className="eyebrow">Platform Control Center · {SUPER_ADMIN_URL_IDENTITY.name} · #{SUPER_ADMIN_URL_IDENTITY.number}</p>
+          <h1>{SUPER_ADMIN_URL_IDENTITY.name}</h1>
           <p className="muted">Control tenant administrators, access, and storefront links.</p>
         </div>
         <button className="secondary" type="button" onClick={logout}>Sign out</button>
