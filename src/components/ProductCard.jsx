@@ -1,5 +1,5 @@
 export default function ProductCard({ product, onAdd }) {
-  const image = product.imageUrls?.[0]
+  const image = product.imageUrls?.find(Boolean)
 
   return (
     <article className="product-card">
