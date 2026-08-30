@@ -1,5 +1,5 @@
 import { signOut } from 'firebase/auth'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { auth } from '../firebase'
 import { getProducts, removeProduct, saveProduct } from '../services/products'
 import { uploadImage } from '../services/cloudinary'
