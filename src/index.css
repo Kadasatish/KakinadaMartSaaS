@@ -97,8 +97,6 @@ fieldset { min-width: 0; }
 
 .auth-page { min-height: 100svh; display: grid; place-items: center; padding: 28px 0; }
 .auth-shell { width: min(100%, 520px); }
-.auth-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 22px; text-decoration: none; font-weight: 900; letter-spacing: -.03em; }
-.auth-brand-mark { display: grid; place-items: center; width: 42px; height: 42px; border-radius: 13px; background: #0f172a; color: white; font-size: .78rem; }
 .auth-card { padding: 28px; background: rgba(255,255,255,.98); border: 1px solid #e2e8f0; border-radius: 22px; box-shadow: 0 22px 55px rgba(15,23,42,.10); }
 .auth-card h1 { margin: 7px 0 8px; font-size: clamp(2rem, 7vw, 3rem); letter-spacing: -.05em; }
 .auth-card > p { margin: 0 0 22px; color: #64748b; line-height: 1.55; }
@@ -120,6 +118,8 @@ fieldset { min-width: 0; }
 .sa-admin-main { min-width: 0; display: grid; gap: 4px; }
 .sa-admin-main strong { font-size: 1rem; overflow-wrap: anywhere; }
 .sa-admin-main span, .sa-admin-main small { color: #64748b; overflow-wrap: anywhere; }
+.tenant-store-link { display: inline-flex; width: fit-content; margin-top: 5px; color: #2563eb; text-decoration: none; font-size: .84rem; font-weight: 800; }
+.tenant-store-link:hover { text-decoration: underline; }
 .sa-admin-status { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
 .status-label { min-width: 62px; text-align: right; font-size: .82rem; font-weight: 850; }
 .status-label.active { color: #15803d; }
