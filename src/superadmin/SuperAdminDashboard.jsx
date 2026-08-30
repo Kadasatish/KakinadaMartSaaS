@@ -3,18 +3,11 @@ import { signOut } from 'firebase/auth'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
-import { ADMIN_URL_IDENTITIES, SUPER_ADMIN_URL_IDENTITY, getAdminIdentity } from '../tenant'
+import { ADMIN_URL_IDENTITIES, SUPER_ADMIN_URL_IDENTITY, getAdminIdentity, PLATFORM_NAME } from '../tenant'
 
 function Toggle({ checked, disabled, onChange }) {
   return (
-    <button
-      type="button"
-      className={`status-toggle ${checked ? 'on' : ''}`}
-      aria-pressed={checked}
-      aria-label={checked ? 'Deactivate admin' : 'Activate admin'}
-      disabled={disabled}
-      onClick={onChange}
-    >
+    <button type="button" className={`status-toggle ${checked ? 'on' : ''}`} aria-pressed={checked} aria-label={checked ? 'Deactivate admin' : 'Activate admin'} disabled={disabled} onClick={onChange}>
       <span className="status-toggle-knob" />
     </button>
   )
@@ -55,10 +48,7 @@ export default function SuperAdminDashboard() {
     setBusyId(admin.id)
     setError('')
     try {
-      await updateDoc(doc(db, 'admins', admin.id), {
-        active: admin.active !== true,
-        updatedAt: serverTimestamp()
-      })
+      await updateDoc(doc(db, 'admins', admin.id), { active: admin.active !== true, updatedAt: serverTimestamp() })
       await loadAdmins()
     } catch (err) {
       setError(err.message || 'Unable to update admin.')
@@ -72,10 +62,7 @@ export default function SuperAdminDashboard() {
     setBusyId(adminId)
     setError('')
     try {
-      await updateDoc(doc(db, 'admins', adminId), {
-        tenantId,
-        updatedAt: serverTimestamp()
-      })
+      await updateDoc(doc(db, 'admins', adminId), { tenantId, updatedAt: serverTimestamp() })
       await loadAdmins()
     } catch (err) {
       setError(err.message || 'Unable to assign tenant.')
@@ -96,18 +83,16 @@ export default function SuperAdminDashboard() {
   }), [admins])
 
   const assignedTenantIds = new Set(admins.map((admin) => admin.tenantId).filter(Boolean))
-  const unassignedSerials = TENANT_OPTIONS
-    .filter((option) => !assignedTenantIds.has(option.tenantId))
-    .map((option) => option.number)
+  const unassignedSerials = TENANT_OPTIONS.filter((option) => !assignedTenantIds.has(option.tenantId)).map((option) => option.number)
   let nextUnassignedSerial = 0
 
   return (
     <main className="container superadmin-page">
       <header className="superadmin-header">
         <div>
-          <p className="eyebrow">Platform Control Center · {SUPER_ADMIN_URL_IDENTITY.name} · #{SUPER_ADMIN_URL_IDENTITY.number}</p>
-          <h1>{SUPER_ADMIN_URL_IDENTITY.name}</h1>
-          <p className="muted">Control tenant administrators, access, and storefront links.</p>
+          <p className="eyebrow">{PLATFORM_NAME} · Super Admin #{SUPER_ADMIN_URL_IDENTITY.number}</p>
+          <h1>{PLATFORM_NAME}</h1>
+          <p className="muted">Super Admin #{SUPER_ADMIN_URL_IDENTITY.number} · Control administrators, store identities, access, and storefront links.</p>
         </div>
         <button className="secondary" type="button" onClick={logout}>Sign out</button>
       </header>
@@ -120,10 +105,9 @@ export default function SuperAdminDashboard() {
 
       <section className="sa-panel">
         <div className="sa-panel-head">
-          <div><p className="eyebrow">Tenant access</p><h2>Administrators</h2></div>
+          <div><p className="eyebrow">{PLATFORM_NAME} · Tenant access</p><h2>Administrators</h2></div>
           <button className="secondary" type="button" onClick={loadAdmins} disabled={loading}>Refresh</button>
         </div>
-
         {error && <p className="error">{error}</p>}
         {loading ? <p>Loading administrators…</p> : admins.length === 0 ? (
           <div className="empty-state"><strong>No tenant admins yet.</strong><span>Create an admin account and assign its tenant ID to manage it here.</span></div>
@@ -139,31 +123,23 @@ export default function SuperAdminDashboard() {
               return (
                 <article className="sa-admin-row" key={admin.id}>
                   <div className="sa-admin-main">
-                    <strong>#{serial} · {tenantId ? identity.name : 'Admin — tenant not assigned'}</strong>
-                    <span>{admin.email || admin.id}</span>
-                    <small>Role: {admin.role || 'admin'}{tenantId ? ` · Tenant: ${tenantId}` : ''}</small>
+                    <strong>#{serial} · {tenantId ? identity.storeName : 'Admin — tenant not assigned'}</strong>
+                    <span>{tenantId ? identity.name : 'Admin account'}</span>
+                    <small>Role: {admin.role || 'admin'}{tenantId ? ` · Store: ${identity.storeName} · Tenant: ${tenantId}` : ''}</small>
                     {!tenantId && (
                       <label className="tenant-assign-control">
                         <span>Assign tenant</span>
-                        <select
-                          value=""
-                          disabled={busy}
-                          onChange={(event) => assignTenant(admin.id, event.target.value)}
-                        >
+                        <select value="" disabled={busy} onChange={(event) => assignTenant(admin.id, event.target.value)}>
                           <option value="">Select tenant…</option>
                           {TENANT_OPTIONS.map((option) => (
-                            <option
-                              key={option.tenantId}
-                              value={option.tenantId}
-                              disabled={assignedTenantIds.has(option.tenantId)}
-                            >
-                              #{option.number} · {option.name} ({option.tenantId}){assignedTenantIds.has(option.tenantId) ? ' — assigned' : ''}
+                            <option key={option.tenantId} value={option.tenantId} disabled={assignedTenantIds.has(option.tenantId)}>
+                              #{option.number} · {option.storeName} ({option.tenantId}){assignedTenantIds.has(option.tenantId) ? ' — assigned' : ''}
                             </option>
                           ))}
                         </select>
                       </label>
                     )}
-                    {storeUrl && <a className="tenant-store-link" href={storeUrl}>Open customer store →</a>}
+                    {storeUrl && <a className="tenant-store-link" href={storeUrl}>Open {PLATFORM_NAME} · {identity.storeName} store →</a>}
                   </div>
                   <div className="sa-admin-status">
                     <span className={`status-label ${active ? 'active' : 'inactive'}`}>{active ? 'Active' : 'Inactive'}</span>
