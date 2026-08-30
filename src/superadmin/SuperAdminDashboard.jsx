@@ -3,7 +3,7 @@ import { signOut } from 'firebase/auth'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { auth, db } from '../firebase'
-import { SUPER_ADMIN_URL_IDENTITY } from '../tenant'
+import { ADMIN_URL_IDENTITIES, SUPER_ADMIN_URL_IDENTITY, getAdminIdentity } from '../tenant'
 
 function Toggle({ checked, disabled, onChange }) {
   return (
@@ -20,6 +20,10 @@ function Toggle({ checked, disabled, onChange }) {
   )
 }
 
+const TENANT_OPTIONS = Object.entries(ADMIN_URL_IDENTITIES)
+  .map(([tenantId, identity]) => ({ tenantId, ...identity }))
+  .sort((a, b) => Number(a.number) - Number(b.number))
+
 export default function SuperAdminDashboard() {
   const navigate = useNavigate()
   const [admins, setAdmins] = useState([])
@@ -31,7 +35,13 @@ export default function SuperAdminDashboard() {
     setError('')
     try {
       const snapshot = await getDocs(collection(db, 'admins'))
-      setAdmins(snapshot.docs.map((item) => ({ id: item.id, ...item.data() })))
+      const rows = snapshot.docs.map((item) => ({ id: item.id, ...item.data() }))
+      rows.sort((a, b) => {
+        const aNumber = Number(getAdminIdentity(a.tenantId).number) || 999
+        const bNumber = Number(getAdminIdentity(b.tenantId).number) || 999
+        return aNumber - bNumber || a.id.localeCompare(b.id)
+      })
+      setAdmins(rows)
     } catch (err) {
       setError(err.message || 'Unable to load admins.')
     } finally {
@@ -57,6 +67,23 @@ export default function SuperAdminDashboard() {
     }
   }
 
+  async function assignTenant(adminId, tenantId) {
+    if (!tenantId) return
+    setBusyId(adminId)
+    setError('')
+    try {
+      await updateDoc(doc(db, 'admins', adminId), {
+        tenantId,
+        updatedAt: serverTimestamp()
+      })
+      await loadAdmins()
+    } catch (err) {
+      setError(err.message || 'Unable to assign tenant.')
+    } finally {
+      setBusyId('')
+    }
+  }
+
   async function logout() {
     await signOut(auth)
     navigate(`/super-admin/${SUPER_ADMIN_URL_IDENTITY.slug}/login`, { replace: true })
@@ -67,6 +94,8 @@ export default function SuperAdminDashboard() {
     active: admins.filter((admin) => admin.active === true).length,
     inactive: admins.filter((admin) => admin.active !== true).length
   }), [admins])
+
+  const assignedTenantIds = new Set(admins.map((admin) => admin.tenantId).filter(Boolean))
 
   return (
     <main className="container superadmin-page">
@@ -96,17 +125,40 @@ export default function SuperAdminDashboard() {
           <div className="empty-state"><strong>No tenant admins yet.</strong><span>Create an admin account and assign its tenant ID to manage it here.</span></div>
         ) : (
           <div className="admin-table">
-            {admins.map((admin) => {
+            {admins.map((admin, index) => {
               const active = admin.active === true
               const busy = busyId === admin.id
               const tenantId = admin.tenantId || ''
+              const identity = getAdminIdentity(tenantId)
               const storeUrl = tenantId ? `/store/${tenantId}` : ''
+              const serial = identity.number || String(index + 1).padStart(2, '0')
               return (
                 <article className="sa-admin-row" key={admin.id}>
                   <div className="sa-admin-main">
-                    <strong>{tenantId || 'No tenant assigned'}</strong>
+                    <strong>#{serial} · {tenantId ? identity.name : 'Admin — tenant not assigned'}</strong>
                     <span>{admin.email || admin.id}</span>
-                    <small>Role: {admin.role || 'admin'}</small>
+                    <small>Role: {admin.role || 'admin'}{tenantId ? ` · Tenant: ${tenantId}` : ''}</small>
+                    {!tenantId && (
+                      <label className="tenant-assign-control">
+                        <span>Assign tenant</span>
+                        <select
+                          value=""
+                          disabled={busy}
+                          onChange={(event) => assignTenant(admin.id, event.target.value)}
+                        >
+                          <option value="">Select tenant…</option>
+                          {TENANT_OPTIONS.map((option) => (
+                            <option
+                              key={option.tenantId}
+                              value={option.tenantId}
+                              disabled={assignedTenantIds.has(option.tenantId)}
+                            >
+                              #{option.number} · {option.name} ({option.tenantId}){assignedTenantIds.has(option.tenantId) ? ' — assigned' : ''}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                    )}
                     {storeUrl && <a className="tenant-store-link" href={storeUrl}>Open customer store →</a>}
                   </div>
                   <div className="sa-admin-status">
