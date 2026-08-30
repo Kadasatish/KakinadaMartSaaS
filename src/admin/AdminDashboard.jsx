@@ -2,6 +2,7 @@ import { signOut } from 'firebase/auth'
 import { useEffect, useState } from 'react'
 import { auth } from '../firebase'
 import { getProducts, removeProduct, saveProduct } from '../services/products'
+import { uploadImage } from '../services/cloudinary'
 import { getOrders, ORDER_STATUSES, updateOrderStatus } from '../services/orders'
 import { getAdminTenant } from '../tenant'
 
@@ -10,13 +11,16 @@ function formatDate(value) {
   return value.toDate().toLocaleString('en-IN')
 }
 
+const emptyForm = { name: '', price: '', imageUrls: ['', ''] }
+
 export default function AdminDashboard() {
   const tenantId = getAdminTenant()
   const [products, setProducts] = useState([])
   const [orders, setOrders] = useState([])
-  const [form, setForm] = useState({ name: '', price: '' })
+  const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
   const [loadingOrders, setLoadingOrders] = useState(true)
+  const [uploading, setUploading] = useState({})
 
   async function loadProducts() {
     try { setProducts(await getProducts(tenantId)) } catch (err) { setError(err.message) }
@@ -32,12 +36,34 @@ export default function AdminDashboard() {
     loadOrders()
   }, [tenantId])
 
+  function setImageUrl(index, value) {
+    setForm((current) => {
+      const imageUrls = [...current.imageUrls]
+      imageUrls[index] = value
+      return { ...current, imageUrls }
+    })
+  }
+
+  async function handleImageUpload(index, file) {
+    if (!file) return
+    setError('')
+    setUploading((current) => ({ ...current, [index]: true }))
+    try {
+      const url = await uploadImage(file)
+      setImageUrl(index, url)
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setUploading((current) => ({ ...current, [index]: false }))
+    }
+  }
+
   async function submit(event) {
     event.preventDefault()
     setError('')
     try {
       await saveProduct(form, tenantId)
-      setForm({ name: '', price: '' })
+      setForm(emptyForm)
       await loadProducts()
     } catch (err) { setError(err.message) }
   }
@@ -67,7 +93,41 @@ export default function AdminDashboard() {
           <h2>Add product</h2>
           <label>Name<input required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} /></label>
           <label>Price<input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
-          <button type="submit">Save product</button>
+
+          <fieldset className="image-upload-card">
+            <legend>Product pictures</legend>
+            {[0, 1].map((index) => (
+              <div className="image-upload-slot" key={index}>
+                <strong>{index === 0 ? 'Front picture' : 'Back picture'}</strong>
+                {form.imageUrls[index] && <img className="image-preview" src={form.imageUrls[index]} alt={`${index === 0 ? 'Front' : 'Back'} preview`} />}
+                <div className="upload-actions">
+                  <label className="upload-button">
+                    📷 Camera
+                    <input
+                      hidden
+                      type="file"
+                      accept="image/*"
+                      capture={index === 0 ? 'user' : 'environment'}
+                      onChange={(e) => handleImageUpload(index, e.target.files?.[0])}
+                    />
+                  </label>
+                  <label className="upload-button">
+                    🖼️ Gallery
+                    <input hidden type="file" accept="image/*" onChange={(e) => handleImageUpload(index, e.target.files?.[0])} />
+                  </label>
+                </div>
+                {uploading[index] && <small>Uploading…</small>}
+                <input
+                  type="url"
+                  placeholder="Or paste online image URL"
+                  value={form.imageUrls[index]}
+                  onChange={(e) => setImageUrl(index, e.target.value)}
+                />
+              </div>
+            ))}
+          </fieldset>
+
+          <button type="submit" disabled={Object.values(uploading).some(Boolean)}>Save product</button>
         </form>
 
         <section>
@@ -75,7 +135,10 @@ export default function AdminDashboard() {
           {products.length === 0 && <p>No products yet.</p>}
           {products.map((product) => (
             <div className="admin-row" key={product.id}>
-              <span>{product.name} · ₹{Number(product.price).toFixed(2)}</span>
+              <div className="admin-product-info">
+                {product.imageUrls?.[0] && <img src={product.imageUrls[0]} alt="" className="admin-thumb" />}
+                <span>{product.name} · ₹{Number(product.price).toFixed(2)}</span>
+              </div>
               {product.id.startsWith('demo-') ? <small>demo</small> : <button className="danger" type="button" onClick={() => remove(product.id)}>Delete</button>}
             </div>
           ))}
