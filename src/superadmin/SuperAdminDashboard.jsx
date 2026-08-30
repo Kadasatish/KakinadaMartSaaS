@@ -73,7 +73,7 @@ export default function SuperAdminDashboard() {
         <div>
           <p className="eyebrow">Platform Control Center</p>
           <h1>Super Admin</h1>
-          <p className="muted">Control tenant administrators and platform access.</p>
+          <p className="muted">Control tenant administrators, access, and storefront links.</p>
         </div>
         <button className="secondary" type="button" onClick={logout}>Sign out</button>
       </header>
@@ -98,12 +98,15 @@ export default function SuperAdminDashboard() {
             {admins.map((admin) => {
               const active = admin.active === true
               const busy = busyId === admin.id
+              const tenantId = admin.tenantId || ''
+              const storeUrl = tenantId ? `/store/${tenantId}` : ''
               return (
                 <article className="sa-admin-row" key={admin.id}>
                   <div className="sa-admin-main">
-                    <strong>{admin.tenantId || 'No tenant assigned'}</strong>
+                    <strong>{tenantId || 'No tenant assigned'}</strong>
                     <span>{admin.email || admin.id}</span>
                     <small>Role: {admin.role || 'admin'}</small>
+                    {storeUrl && <a className="tenant-store-link" href={storeUrl}>Open customer store →</a>}
                   </div>
                   <div className="sa-admin-status">
                     <span className={`status-label ${active ? 'active' : 'inactive'}`}>{active ? 'Active' : 'Inactive'}</span>
