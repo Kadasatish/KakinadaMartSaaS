@@ -24,6 +24,9 @@ export async function saveProduct(product, tenantId) {
     price: Number(product.price),
     active: product.active !== false,
     tenantId,
+    imageUrl: product.imageUrl || '',
+    imageFrontUrl: product.imageFrontUrl || '',
+    imageBackUrl: product.imageBackUrl || '',
     createdAt: product.createdAt || serverTimestamp(),
     updatedAt: serverTimestamp()
   }, { merge: true })
