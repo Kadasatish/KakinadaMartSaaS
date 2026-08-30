@@ -3,7 +3,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { auth, db } from '../firebase'
 import { doc, getDoc } from 'firebase/firestore'
-import { SUPER_ADMIN_URL_IDENTITY } from '../tenant'
+import { SUPER_ADMIN_URL_IDENTITY, PLATFORM_NAME } from '../tenant'
 
 export default function SuperAdminLogin() {
   const navigate = useNavigate()
@@ -45,15 +45,15 @@ export default function SuperAdminLogin() {
   return (
     <main className="container auth-page">
       <section className="auth-shell">
-        <Link className="auth-back" to="/">← Back to customer store</Link>
+        <Link className="auth-back" to="/">← Back to {PLATFORM_NAME}</Link>
         <div className="auth-card">
-          <span className="auth-badge">Platform control · {SUPER_ADMIN_URL_IDENTITY.name} · #{SUPER_ADMIN_URL_IDENTITY.number}</span>
-          <h1>{SUPER_ADMIN_URL_IDENTITY.name}</h1>
-          <p>Secure access to tenant administrators and platform controls.</p>
+          <span className="auth-badge">{PLATFORM_NAME} · Super Admin #{SUPER_ADMIN_URL_IDENTITY.number}</span>
+          <h1>{PLATFORM_NAME}</h1>
+          <p>Super Admin #{SUPER_ADMIN_URL_IDENTITY.number} control center. Secure access to tenant administrators, stores, and platform controls.</p>
           <form className="form-card" onSubmit={submit}>
             <label>Email<input autoComplete="email" type="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="superadmin@example.com" /></label>
             <label>Password<input autoComplete="current-password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="••••••••" /></label>
-            <button type="submit" disabled={busy || !validUrl}>{busy ? 'Verifying access…' : 'Enter control center'}</button>
+            <button type="submit" disabled={busy || !validUrl}>{busy ? 'Verifying access…' : `Enter ${PLATFORM_NAME} control center`}</button>
             {error && <p className="error">{error}</p>}
           </form>
         </div>
