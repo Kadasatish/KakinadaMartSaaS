@@ -96,6 +96,10 @@ export default function SuperAdminDashboard() {
   }), [admins])
 
   const assignedTenantIds = new Set(admins.map((admin) => admin.tenantId).filter(Boolean))
+  const unassignedSerials = TENANT_OPTIONS
+    .filter((option) => !assignedTenantIds.has(option.tenantId))
+    .map((option) => option.number)
+  let nextUnassignedSerial = 0
 
   return (
     <main className="container superadmin-page">
@@ -125,13 +129,13 @@ export default function SuperAdminDashboard() {
           <div className="empty-state"><strong>No tenant admins yet.</strong><span>Create an admin account and assign its tenant ID to manage it here.</span></div>
         ) : (
           <div className="admin-table">
-            {admins.map((admin, index) => {
+            {admins.map((admin) => {
               const active = admin.active === true
               const busy = busyId === admin.id
               const tenantId = admin.tenantId || ''
               const identity = getAdminIdentity(tenantId)
               const storeUrl = tenantId ? `/store/${tenantId}` : ''
-              const serial = identity.number || String(index + 1).padStart(2, '0')
+              const serial = identity.number || unassignedSerials[nextUnassignedSerial++] || '—'
               return (
                 <article className="sa-admin-row" key={admin.id}>
                   <div className="sa-admin-main">
