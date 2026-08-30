@@ -11,7 +11,7 @@ function formatDate(value) {
   return value.toDate().toLocaleString('en-IN')
 }
 
-const emptyForm = { name: '', price: '', imageUrls: ['', ''] }
+const emptyForm = { name: '', price: '', imageUrls: [''] }
 
 export default function AdminDashboard() {
   const tenantId = getAdminTenant()
@@ -20,7 +20,7 @@ export default function AdminDashboard() {
   const [form, setForm] = useState(emptyForm)
   const [error, setError] = useState('')
   const [loadingOrders, setLoadingOrders] = useState(true)
-  const [uploading, setUploading] = useState({})
+  const [uploading, setUploading] = useState(false)
 
   async function loadProducts() {
     try { setProducts(await getProducts(tenantId)) } catch (err) { setError(err.message) }
@@ -36,25 +36,21 @@ export default function AdminDashboard() {
     loadOrders()
   }, [tenantId])
 
-  function setImageUrl(index, value) {
-    setForm((current) => {
-      const imageUrls = [...current.imageUrls]
-      imageUrls[index] = value
-      return { ...current, imageUrls }
-    })
+  function setImageUrl(value) {
+    setForm((current) => ({ ...current, imageUrls: [value] }))
   }
 
-  async function handleImageUpload(index, file) {
+  async function handleImageUpload(file) {
     if (!file) return
     setError('')
-    setUploading((current) => ({ ...current, [index]: true }))
+    setUploading(true)
     try {
       const url = await uploadImage(file)
-      setImageUrl(index, url)
+      setImageUrl(url)
     } catch (err) {
       setError(err.message)
     } finally {
-      setUploading((current) => ({ ...current, [index]: false }))
+      setUploading(false)
     }
   }
 
@@ -95,39 +91,36 @@ export default function AdminDashboard() {
           <label>Price<input required type="number" min="0" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} /></label>
 
           <fieldset className="image-upload-card">
-            <legend>Product pictures</legend>
-            {[0, 1].map((index) => (
-              <div className="image-upload-slot" key={index}>
-                <strong>{index === 0 ? 'Front picture' : 'Back picture'}</strong>
-                {form.imageUrls[index] && <img className="image-preview" src={form.imageUrls[index]} alt={`${index === 0 ? 'Front' : 'Back'} preview`} />}
-                <div className="upload-actions">
-                  <label className="upload-button">
-                    📷 Camera
-                    <input
-                      hidden
-                      type="file"
-                      accept="image/*"
-                      capture={index === 0 ? 'user' : 'environment'}
-                      onChange={(e) => handleImageUpload(index, e.target.files?.[0])}
-                    />
-                  </label>
-                  <label className="upload-button">
-                    🖼️ Gallery
-                    <input hidden type="file" accept="image/*" onChange={(e) => handleImageUpload(index, e.target.files?.[0])} />
-                  </label>
-                </div>
-                {uploading[index] && <small>Uploading…</small>}
-                <input
-                  type="url"
-                  placeholder="Or paste online image URL"
-                  value={form.imageUrls[index]}
-                  onChange={(e) => setImageUrl(index, e.target.value)}
-                />
+            <legend>Product picture</legend>
+            <div className="image-upload-slot">
+              <strong>Take or choose one product photo</strong>
+              {form.imageUrls[0] && <img className="image-preview" src={form.imageUrls[0]} alt="Product preview" />}
+              <div className="upload-actions">
+                <label className="upload-button">
+                  📷 Camera
+                  <input
+                    hidden
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => handleImageUpload(e.target.files?.[0])}
+                  />
+                </label>
+                <label className="upload-button">
+                  🖼️ Gallery
+                  <input hidden type="file" accept="image/*" onChange={(e) => handleImageUpload(e.target.files?.[0])} />
+                </label>
               </div>
-            ))}
+              {uploading && <small>Uploading…</small>}
+              <input
+                type="url"
+                placeholder="Or paste online image URL"
+                value={form.imageUrls[0]}
+                onChange={(e) => setImageUrl(e.target.value)}
+              />
+            </div>
           </fieldset>
 
-          <button type="submit" disabled={Object.values(uploading).some(Boolean)}>Save product</button>
+          <button type="submit" disabled={uploading}>Save product</button>
         </form>
 
         <section>
@@ -136,7 +129,7 @@ export default function AdminDashboard() {
           {products.map((product) => (
             <div className="admin-row" key={product.id}>
               <div className="admin-product-info">
-                {product.imageUrls?.[0] && <img src={product.imageUrls[0]} alt="" className="admin-thumb" />}
+                {product.imageUrls?.find(Boolean) && <img src={product.imageUrls.find(Boolean)} alt="" className="admin-thumb" />}
                 <span>{product.name} · ₹{Number(product.price).toFixed(2)}</span>
               </div>
               {product.id.startsWith('demo-') ? <small>demo</small> : <button className="danger" type="button" onClick={() => remove(product.id)}>Delete</button>}
