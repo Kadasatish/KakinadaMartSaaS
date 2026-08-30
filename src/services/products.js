@@ -24,6 +24,7 @@ export async function saveProduct(product, tenantId) {
     price: Number(product.price),
     active: product.active !== false,
     tenantId,
+    imageUrls: Array.isArray(product.imageUrls) ? product.imageUrls.filter(Boolean) : [],
     createdAt: product.createdAt || serverTimestamp(),
     updatedAt: serverTimestamp()
   }, { merge: true })
